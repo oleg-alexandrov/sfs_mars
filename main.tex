@@ -129,9 +129,9 @@
 %  Key Points summarize the main points and conclusions of the article
 %  Each must be 100 characters or less with no special characters or punctuation
 
-\begin{keypoints}
-\item empty
-\end{keypoints}
+%\begin{keypoints}
+%\item empty
+%\end{keypoints}
 
 %% ------------------------------------------------------------------------ %%
 %
@@ -146,9 +146,10 @@
 %% \begin{abstract} starts the second page
 
 \begin{abstract}
-This work presents a practical, usable shape-from-shading algorithm that works for Mars.
+This work presents a practical, usable Shape-from-Shading algorithm that works for Mars.
 We model the haze in the Mars atmosphere, and find a best fit reflectance model using low
-resolution CTX images and a high-resolution CTX DEM, that we use to to enhance a high-resolution CTX DEM, which we compare to an even higher resolution HiRISE DEM.
+resolution CTX images and a high-resolution CTX DEM, that we use to enhance this DEM, 
+which we compare to an even higher resolution HiRISE DEM.
 \end{abstract}
 
 
@@ -183,21 +184,21 @@ resolution CTX images and a high-resolution CTX DEM, that we use to to enhance a
 
 \section{Introduction}
 
-Shape-from-shading (SfS), also known as photoclinometry, is a set of
+Shape-from-Shading (SfS), also known as photoclinometry, is a set of
 techniques for recovering surface relief based on variation in light
 intensity recorded in images. 
 
 In our paper \cite{alexandrovmulti}, we described a Shape-from-Shading implementation
-and its application in creation of high-resolution Lunar Digital Elevation Moldes (DEMs) based on LRO NAC
+and its application in creation of high-resolution Lunar Digital Elevation Models (DEMs) based on LRO NAC
 images. Here we extend and validate that approach for Mars imagery. 
 
-We proceed in a manner broadly similar to \citep{wohlfarth2018high}, in that we model the haze on Mars as an additive contribution to the image formation model, and we use that to obtain enhanced terrain models. Just as them, we employ CTX images to create a terrain model with SfS, and use a pre-existing HiRISE DEM for validation. We take advantage of the fact that the Mars Reconnaissance Orbiter (MRO) mission has two cameras: CTX, which acquires images at 6 meters per pixel, and HiRISE, whose images are at 0.25 m pixel, and the fact that there exist pre-existing DEMs made with state-of-the-art software from HiRISE images, which can be used to validate any DEMs created with shape-from-shading from the lower-resolution CTX images.   
+We proceed in a manner broadly similar to \citep{wohlfarth2018high}, in that we model the haze on Mars as an additive contribution to the image formation model, and we use that to obtain enhanced terrain models. Just as them, we employ CTX images to create a terrain model with SfS, and use a pre-existing HiRISE DEM for validation. We take advantage of the fact that the Mars Reconnaissance Orbiter (MRO) mission has two cameras: CTX, which acquires images at 6 meters per pixel, and HiRISE, whose images are at 0.25 m pixel, and the fact that there exist pre-existing DEMs made with state-of-the-art software from HiRISE images, which can be used to validate any DEMs created with SfS from the lower-resolution CTX images.   
 
 There are several differences in our approach which make it more realistic. First, we model not only the haze, but also find a best fit reflectance model, which increases the accuracy. Second, to infer the haze coefficients they make use of the same high-resolution HiRISE DEM which they later use for validation. Once they learned the haze coefficients, they blur the HiRISE DEM, run SfS on it, and get a result closer to that high-resolution DEM than what they start with. 
 
-We do not use the same HiRISE DEM for both training and validation, which can influence the results. We work with CTX images from the beginning to the end, and we use the HiRISE DEM for validation only. We achieve this by creating a high-resolution CTX DEM (which is much lower resolution than HiRISE), then use this one together with lower-resolution CTX images (whose resolution is comparable to the effective resolution of this DEM) to infer the haze and exposure. Then we use the haze values on the original CTX images to enhance the high-resolution CTX DEM which we then compare with the HiRISE DEM.  
+We do not use the same HiRISE DEM for both training and validation, which can influence the results. We work with CTX images from the beginning to the end, and we use the HiRISE DEM for validation only. We achieve this by creating a high-resolution CTX DEM (which is much lower resolution than HiRISE), then use this one together with lower-resolution CTX images (whose resolution is comparable to the effective resolution of this DEM) to infer the haze and exposure values. Then we use these on the original CTX images to enhance the high-resolution CTX DEM which we then compare with the HiRISE DEM.  
 
-Another difference is that when we find the best haze coefficients, we also find the best fitting reflectance model. Lastly, we use multiple CTX images (two and up to four), rather than just one. 
+Another difference is that when we find the best exposure and haze coefficients, we also determine the best-fitting reflectance model. Lastly, we use multiple CTX images (two and up to four), rather than just one. 
 
 Our SfS implementation is not only an algorithm or some research code but released as a software program, called \texttt{sfs}, as part
 of the NASA Ames Stereo Pipeline (ASP) \citep{ASP2017}, a collection of
@@ -235,7 +236,7 @@ the gradients (partial derivatives) $p(x,y)$ and $q(x, y)$ of $h(x, y)$,
 that are varied independently, while having them connected to 
 $h(x, y)$ via the integrability constraint as described below. This results in a less blurred 
 solution if we instead expressed in the cost function these gradients as 
-centered difference approximations of the derivatives of $h(x, y)$ without having them vary on their own. 
+centered difference approximations of $h(x, y)$ without having them vary on their own. 
 
 The cost function to be minimized is
 
@@ -256,7 +257,7 @@ It is made of four terms, with weights $\mu > 0,$ $\nu>0,$ and $\lambda > 0$
 attached to the last three. Here, $I_k(h(x, y))$ is the $k$-th camera image interpolated at
 pixels obtained by projecting into the camera 3D points from the terrain
 $h(x, y)$, $R_k(h(x, y), p(x, y), q(x,y))$ is the reflectance computed from the terrain for $k$-th image (section \ref{reflectance}), and $\left\|\nabla^2 h(x, y) \right\|^2 $ is the sum
-of squares of all second-order partial derivatives of $h$.
+of squares of all second-order partial derivatives of $h(x, y)$.
 
 The first term is the brightness constraint. It enforces that the
 simulated light intensity for the given terrain agrees well with
@@ -280,7 +281,7 @@ $\mu$ is used to control the smoothness amount. Its value should not be too larg
 also points out that if starting with the true solution, this term
 will cause the optimization to move away from it, and it can also
 over-smooth the result. However, one rarely gets to start with the
-true solution, and in our experiments on real data, we nevertheless
+true solution, and in our experiments on real data, we 
 found that it is necessary to use this term to get a good solution.
 
 The third term, weighed by $\nu > 0,$ constrains $p(x, y)$ and $q(x,y)$ to not vary too much from
@@ -290,11 +291,11 @@ This is called the integrability constraint.
 The SfS solution is known to reveal high resolution detail, yet it
 may drift at larger spatial scales \citep{grumpe2014construction}.
 That is the reason for the fourth term, weighted by $\lambda$, that
-keeps the solution close to the initial guess terrain, $h_0$. A
+keeps the solution close to the initial guess terrain, $h_0(x, y)$. A
 large value here is also undesirable, as it may constrain the
 solution too much, hence some experimentation is usually necessary
 to set this properly. The formulation of this term is not ideal, 
-since penalizing departures from the a priori surface penalizes added local
+since penalizing departures from the a priori surface makes it harder to add local
 details, which is the whole point of the process.  It would be better to penalize
 the departure of the model only after smoothing $h(x, y)$ to an equivalent resolution from
 the a priori terrain.  Given our implementation, doing it that way is impractical.  
@@ -345,22 +346,21 @@ fit Minnaert or lunar-Lambertian models to a given Hapke model, and
 may be useful for deriving parameters for $\Lambda(\alpha)$ in our
 \texttt{sfs} program.
 
-For Mars, one often employs the Hapke model \citet{hapke1993opposition}, etc, more exactly with its formulation as given in \citep{fernando2013surface}. 
-
-Both of these models have coefficients that need to be tuned. We optimized these coefficients as part of the SfS problem, as described later. 
+For Mars, one often employs the Hapke model \citet{hapke1993opposition}. We experimented with its formulation as given in \citep{fernando2013surface}. Both of these models have coefficients that need to be tuned. We optimized these coefficients as part of the SfS problem, as described later. 
 
 It is important to note that $h(x, y)$ and the approximations $p(x, y)$ and $q(x,y)$ to its partial
 derivatives are in a local projection for the given terrain. The sun position (which gives the 
 illumination direction) and the camera position are all in a Cartesian coordinate system with its origin at the center of the planet (called the ECEF coordinates). Hence, one should compute the terrain points and surface normals in ECEF before proceeding with finding the angles $i, e, \alpha$ and the reflectance.  
-\section{Handling camera errors}
+
+\subsection{Handling Camera and Alignment Errors}
 \label{bundleadjust}
 
-The position and orientation of CTX images is quite imprecise. We use ASP's \texttt{bundle\_adjust} tool
+The position and orientation of CTX images is quite imprecise. We use ASP's bundle adjustment program
 to eliminate the camera errors before we create a DEM from the CTX images and refining it with SfS. To compare with the HiRISE DEM, we bring it into alignment to the CTX DEM using ASP's \texttt{pc\_align} tool which employs the Iterative Closest Point algorithm. 
 
-If the illumination conditions for the images are very different, bundle adjustment may fail, as it becomes challenging to identify interest point matches across the images. We observed this for the Moon, but not for Mars. To increase the likelihood of success, one can collect perhaps 5-10 images and order them so that the illumination condition difference between any consecutive images is not too large.   
+If the illumination conditions for the images are very different, bundle adjustment may fail, as it becomes challenging to identify interest point matches across the images. We observed this for the Moon, but not for Mars, where the CTX (and HiRISE) images exhibit much less variation in illumination. To increase the likelihood of success of bundle adjustment, one can collect perhaps 5-10 images and order them so that the illumination condition difference between any consecutive images is not too large.   
 
-The SfS tool can further refine the camera positions and orientation as part of the optimization, and this works very well, improving the quality of the results somewhat. Yet we found it sufficient to keep them the cameras fixed during SfS as preliminary bundle adjustment was accurate enough. 
+The SfS tool can further refine the camera positions and orientations as part of the optimization, and this works very well, improving the quality of the results somewhat compared to keeping these quantities fixed. Yet we found that the preliminary bundle adjustment was sufficient on its own. 
 
 \subsection{Discretization}
 
@@ -369,7 +369,7 @@ domain of computation is a gridded rectangular box, and the quantities $h(x,y)$,
 become matrices of numbers. Central differences are used to find
 the partial derivatives.
 
-The values of the these quantities the boundary are kept fixed during optimization. The SfS tool allows these to be varied, yet better results were obtained if they are fixed instead.
+The values of the these quantities at the boundary are kept fixed during optimization. The SfS tool allows these to be varied, yet better results were obtained if they are fixed instead.
 
 \subsection{Initialization}
 
@@ -394,8 +394,8 @@ other means would also work.
 \begin{equation}
 T_k = \frac{ \int\!\! \int \! I_k(h(x, y)) \,dx\,dy }{ \int\!\! \int \! R_k(h(x, y)) \,dx\,dy}
 \end{equation}
-
-We set the initial haze to be 0. 
+We set the initial haze values to be 0, and we initialize $p(x, y)$ and $q(x, y)$ as the partial derivatives of
+$h(x, y)$. 
 
 We found the weights $\mu, \nu,$ and $\lambda$ to be highly dependent 
 on target surface properties and the resolved ground sample 
@@ -414,39 +414,36 @@ difference of elevations, measured in meters (then also squared).
 It is perhaps not surprising that these cannot be easily reconciled,
 hence for each target body and resolution a study needs to be done to evaluate the best value for this weight.
 
-\subsection{Two-step optimization}
+\subsection{Two-step Optimization}
 \label{twostep}
 The optimization problem, as set, has many variables, and likely many potential solutions. While in this paper we can always validate the result against the independently acquired high resolution HiRISE model,
 the eventual goal may be to use SfS on HiRISE images themselves, when no other ground truth is available. 
-Hence it is desired to solve the problem in a way which may give some confidence in the results without
-using an external ground truth. Hence we employ an approach that is similar in spirit to \citep{wohlfarth2018high}, in first determining the exposure and haze for each image (and perhaps refining the camera positions and reflectance coefficients), without however, using the same HiRISE DEM in both deriving these and subsequent validation. 
+Thus, it is desired to solve the problem in a way which may give some confidence in the results without
+using an external ground truth. Hence, we employ an approach that is similar in spirit to \citep{wohlfarth2018high}, in first determining the exposure and haze for each image (and also refining the camera positions and reflectance coefficients), and later keeping them fixed when refining the terrain itself. 
 
-We note that the exposure and haze is image dependent, since each image is acquired independently, and the haze depends on the atmospheric conditions at the moment the image was acquired as well as
+We note that the exposure and haze are image-dependent, since each image is acquired independently, and the haze depends on the atmospheric conditions at the moment the image was taken as well as
 the path through the atmosphere the rays traced from the ground to the camera. It is also expected
 that the reflectance model depends on the surface geology of a particular terrain being model. 
-And, of course, camera position and orientation is different for each image. 
 Yet, these do not depend on the particular point on the terrain, pixel in the image,
 or image resolution. Hence, given a particular set of CTX images, we train these quantities as follows.
 We first run stereo with the full resolution CTX images, and create a terrain model. It is known that
-the effective resolution of the terrain will be coarser than the image resolution. (Add here). Therefore 
+the effective resolution of the terrain will be coarser than the image resolution. Therefore,  
 we create this terrain model using a grid size that is 4 times the CTX image resolution, hence 
-about 24 meters/pixel, at which it should be sufficiently accurate. We then resample the images by a factor of 4 as well. We then minimize the cost function \ref{cost} using these resampled images while keeping the terrain fixed, and varying the image exposure, haze, model coefficients, and perhaps camera positions and orientations. Note that when doing this, all terms in that equation except the first are constant, hence the weights $\lambda, \mu, \nu$ are not important. 
+about 24 meters/pixel, at which it should be sufficiently accurate. We then resample the images by a factor of 4 as well, for consistency. We then minimize the cost function \ref{cost} using these resampled images while keeping the terrain fixed, and varying the image exposure, haze, model coefficients (and, if necessary, camera positions and orientations). Note that when doing this, all terms in that equation except the first are constant, hence the weights $\lambda, \mu, \nu$ are not important. 
 
-We then use these learned quantities and the original full-resolution CTX images together with the terrain model obtained from this images, but this time the terrain is at the ground sample distance rather a multiple of 4 of it, to refine this terrain model using shape-from-shading, obtaining additional detail, while keeping fixed the quantities previously determined. We compare both the initial guess terrain and the final result to the much higher resolution HiRISE DEM that is binned to the same grid size, hence from 1 m/pixel to 6 m/pixel. 
-
-Say here about how to find the weights. They may be grid-dependent, hence they change when going to the finer resolution. 
+We then use and keep fixed these learned quantities and the original full-resolution CTX images together with the terrain model obtained from this images, but this time the terrain is at the ground sample distance rather a multiple of 4 of it, to refine this terrain model using SfS, obtaining additional detail. We compare both the initial guess terrain and the final SfS result to the much higher resolution HiRISE DEM that is regridded to 6 m/pixel as well. 
 
 \subsection{The Solver}
 
-We use Google's Ceres solver \citep{agarwal2012ceres} to minimize
-the cost function. Ceres is a highly versatile and very large-scale
+We use Google's CERES solver \citep{agarwal2012ceres} to minimize
+the cost function. CERES is a highly versatile and very large-scale
 least squares solver using the Levenberg-Marquardt algorithm. It
 automatically computes partial derivatives numerically, creates a
 sparse matrix for the problem which it inverts appropriately at
 each iteration, and it handles properly situations when this matrix
 is singular or not well-conditioned. All the user needs to do is
 to provide routines for computing the terms in the cost function,
-as well as stopping criteria. Ceres is also able to prevent
+as well as stopping criteria. CERES is also able to prevent
 unreasonably large cost function terms from dominating the computation,
 though we did not use this feature.
 
@@ -489,14 +486,13 @@ The CTX images we used in these experiments are shown in Table \ref{ctximages}.
 \label{sfs1}
 \end{figure}
 
-We started by bundle-adjusting all of them using ASP's bundle\_adjust tool, then we used the second and the third (which were acquired with similar illumination) to create a CTX DEM with ASP's stereo tool. 
+We started by bundle-adjusting all of the images using ASP to eliminate camera errors, then we used the second and the third images (which were acquired with similar illumination) to create a CTX DEM with ASP's \texttt{stereo} program. 
 
-While the images have a ground sample distance on the order of 6 meters/pixel, a terrain model obtained from them will have an effective resolution that will be coarser by a factor of 4 or even more. Hence, we created the terrain model at 24 meters/pixel, which shows a reasonable amount of detail. 
-As described in section \ref{twostep}, we used this model to solve the SfS problem while keeping this terrain fixed, and varying only the image exposures, haze values, and reflectance model coefficients, which are resolution-independent. The images used here were also resampled, for consistency, to the same 4x coarser resolution using the USGS ISIS \texttt{reduce} tool.  
+While the CTX images have a ground sample distance on the order of 6 meters/pixel, a terrain model obtained from them will have an effective resolution that will be coarser by a factor of 4 or even more. Hence, we created the terrain model at 24 meters/pixel, which shows a reasonable amount of detail. The DEM we used is shown in Figure \ref{hires}. 
 
-The DEM we used is shown in Figure \ref{hires}. 
+As described in section \ref{twostep}, we used this terrain model to solve the SfS problem while keeping this terrain fixed, and varying only the image exposures, haze values, and reflectance model coefficients, which are resolution-independent. The images used here were also resampled, for consistency, to the same 4x coarser resolution using the USGS ISIS \texttt{reduce} tool.  
 
-At the next step, we gridded the same stereo terrain at 6 meters/pixel, hence the full image resolution, at which noise and lack of detail becomes obvious. We chose a small terrain portion to refine via SfS, while close to the terrain from Figure fig we used earlier. We employed the original CTX images to refine this terrain using SfS, while keeping fixed the image exposures, haze value, and reflectance model coefficients that we determined at the previous step.   
+At the next step, we considered the same terrain model created with stereo as above, yet chose a clip from it that was not overlapping, but was close, to the one used earlier to determine the image and model parameters. This is meant to show that our SfS algorithm is able to generalize, to some extent, and it need not be used on precisely the same region it was trained on. We gridded this clip at 6 meters/pixel, and we employed the original CTX images to refine this terrain using SfS, while keeping fixed the image exposures, haze values, and reflectance model coefficients that we determined at the previous step.   
 
 \begin{figure}[h!]
 \centering
@@ -522,25 +518,25 @@ In the second experiment, we used the first, third, and fourth images while mode
 
 In both of these examples we used $\mu=0.03$, $\nu=0.1$, and $\lambda=10^{-5}.$
 
-We obtained very similar results if using instead the Hapke reflectance model while refining its coefficients just as for the lunar-Lambertian. 
+We obtained very similar results if using instead the Hapke reflectance model while refining its coefficients just as for the lunar-Lambertian. We got worse results with the Lambertian model, or when not optimizing the coefficients of the models. 
 
-In Figure \ref{sfs1} are shown the five images that are used in this example. In Figure \ref{sfs2} are shown the reference HiRISE DEM that is used for validation, the initial guess CTX DEM at 6 m/pixel, and two results from running SfS, one without modeling haze and second one while modeling it. The colorized absolute difference between the last three DEMs and the reference HiRISE DEM is shown in Figure \ref{sfs3}. Lastly, a profile through some of the DEMs is shown in Figure \ref{profile}. 
+In Figure \ref{sfs1} are shown the five images that are used in this example. In Figure \ref{sfs2} are presented the reference HiRISE DEM that is used for validation, the initial guess CTX DEM at 6 m/pixel, and two results from running SfS, one without modeling haze and second one while modeling it. The colorized absolute difference between the last three DEMs as compared to the reference HiRISE DEM is shown in Figure \ref{sfs3}. Lastly, a profile through some of the DEMs is shown in Figure \ref{profile}. 
 
-It can be seen from these figures that SfS removes the numerical noise from the CTX DEM (the noise is expected, given that the effective resolution of the DEM is 4x the image resolution, and here it is created at 1x image resolution), adds a wealth of detail, and reconstructs correctly the crater rim. It can also be seen, based on the shades of red in Figure \ref{sfs3} that the accuracy of the   
+It can be seen from these figures that SfS removes the numerical noise from the CTX DEM (the noise is expected, given that the effective resolution of the DEM is 4x the image resolution, and here it is created at 1x image resolution), adds a wealth of detail, and reconstructs correctly the crater rim. It can also be seen, based on the shades of red in Figure \ref{sfs3} that the accuracy of the obtained terrain models is worse where the images are very bright.   
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.8\textwidth]{profile.png}
-\caption[sfs]{A profile of the DEMs in Figure \ref{sfs2} along a cutline going roughly vertically and through the middle of the crater. Profiled are the HIRISE DEM (green), initial guess to SfS (blue), and the SfS result when haze is not modeled (red).}
+\caption[sfs]{A profile of the DEMs in Figure \ref{sfs2} along a cutline going roughly vertically and through the middle of the crater. Profiled are the HiRISE DEM (green), initial guess to SfS (blue), and the SfS result when haze is not modeled (red).}
 \label{profile}
 \end{figure}
 
 
 \section{Conclusions}
 
-We showed that it is possible to use CTX images to refine terrain models on Mars, with and without modeling haze, and while tuning the reflectance model coefficients as part of the optimization. We validated our results with an independently created hi-resolution HiRISE DEMs. 
+We showed that it is possible to use CTX images to refine terrain models on Mars, with and without modeling haze, and while tuning the reflectance model coefficients as part of the optimization. We validated our results with an independently created hi-resolution HiRISE DEM. 
 
-The results look very promising. There is room for improvement in regions where the illumination produces the brightest spots. Either our modeling is not fully accurate there, or perhaps images are becoming saturated and the brightness values are not accurate. It will likely help to have images with more diverse illumination conditions, which may be a challenge with both CTX and HiRISE data, hence we would be inclined to also study other imagers in the future. 
+The results look very promising. There is room for improvement in regions where the illumination produces the brightest spots. Either our modeling is not fully accurate there, or perhaps images are becoming saturated and the brightness values are not accurate. It will likely help to have images with more diverse illumination conditions, which may be a challenge with both CTX and HiRISE data, hence we would be inclined to also study other imagers in the future. We also plan to improve our modeling, and study how the images and reflectance model used impact the results. The ultimate goal is to use SfS with HiRISE images to refine the existing highest resolution terrains, which may help in landing future missions to Mars. 
 
 %Text here ===>>>
 
@@ -709,15 +705,11 @@ The results look very promising. There is room for improvement in regions where 
 
 \acknowledgments
 
-%\added{We would like to thank the anonymous reviewers for insightful and constructive reviews of this paper.} % this is repeated below
-
 We gratefully acknowledge the Resource Prospector project at NASA Ames
 Research Center for providing support for this research.
 
 We would like to thank the anonymous reviewers for extremely thorough reviews and comments
-that not only improved this manuscript, but gave us ideas for other
-work to pursue in the future.  All the data used are listed in the
-references or archived in the Planetary Data System.
+of our paper \cite{alexandrovmulti} that we used in improving our software and our modeling for Mars. 
 
 
 %% ------------------------------------------------------------------------ %%
